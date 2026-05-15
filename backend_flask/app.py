@@ -3,6 +3,8 @@ from flask_cors import CORS
 import pickle
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
+import concurrent.futures # Giúp cào 10 ảnh cùng lúc cho nhanh
 
 app = Flask(__name__)
 CORS(app) # Cho phép Frontend (React) kết nối với Backend (Flask)
@@ -20,6 +22,7 @@ anime_df = artifacts['dataframe']
 id_to_index = artifacts['id_to_index']
 indices = artifacts['indices']
 print("Tải model thành công!")
+
 
 
 def get_mal_user_animelist(username):
@@ -76,35 +79,23 @@ def get_mal_user_animelist(username):
     print(f"[DEBUG API] TỔNG KẾT: Lọc được {len(user_ratings)} bộ phim đã chấm điểm!")
     return user_ratings
 
-# # 3. HÀM GỢI Ý (Bê y nguyên từ Colab của bạn sang)
-# def recommend_animes(user_ratings_dict):
-#     candidate_scores = {}
-#     watched_anime_ids = list(user_ratings_dict.keys())
-
-#     for anime_id, rating in user_ratings_dict.items():
-#         if anime_id in id_to_index:
-#             idx = id_to_index[anime_id]
-#             sim_scores = list(enumerate(cosine_sim[idx]))
-#             sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:21]
-
-#             for i, sim in sim_scores:
-#                 candidate_id = anime_df.iloc[i]['anime_id']
-#                 if candidate_id in watched_anime_ids:
-#                     continue
-
-#                 score = sim * rating
-#                 if candidate_id in candidate_scores:
-#                     candidate_scores[candidate_id] += score
-#                 else:
-#                     candidate_scores[candidate_id] = score
-
-#     top_candidates = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:10]
-#     result_indices = [id_to_index[cid] for cid, score in top_candidates]
-#     result_df = anime_df.iloc[result_indices][['anime_id', 'name', 'genre']].copy()
-#     result_df['hybrid_score'] = [score for cid, score in top_candidates]
-    
-#     # Chuyển Dataframe thành JSON để gửi cho React
-#     return result_df.to_dict(orient='records')
+def get_anime_poster(anime_id):
+    url = f"https://myanimelist.net/anime/{anime_id}"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        res = requests.get(url, headers=headers, timeout=5)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        # Thẻ ảnh bìa của MAL luôn có thuộc tính itemprop="image"
+        img_tag = soup.find('img', itemprop='image')
+        if img_tag:
+            # Lấy link ảnh chất lượng cao
+            return img_tag.get('data-src') or img_tag.get('src')
+    except Exception as e:
+        print(f"[DEBUG] Lỗi cào ảnh phim {anime_id}: {e}")
+        
+    # Ảnh dự phòng nếu web bị lỗi
+    return "https://via.placeholder.com/225x318/1e293b/94a3b8?text=No+Poster"
 
 # 3. HÀM GỢI Ý LAI GHÉP (HYBRID CASCADE)
 def recommend_animes(user_ratings_dict, username):
@@ -153,15 +144,41 @@ def recommend_animes(user_ratings_dict, username):
         
         final_recommendations.append((candidate_id, hybrid_score))
 
-    # Sắp xếp lại lần cuối để lấy Top 10 gửi cho người dùng
+    # # Sắp xếp lại lần cuối để lấy Top 10 gửi cho người dùng
+    # top_10_final = sorted(final_recommendations, key=lambda x: x[1], reverse=True)[:10]
+
+    # # Đóng gói dữ liệu thành JSON để gửi về Frontend
+    # result_indices = [id_to_index[cid] for cid, score in top_10_final]
+    # result_df = anime_df.iloc[result_indices][['anime_id', 'name', 'genre']].copy()
+    # result_df['hybrid_score'] = [score for cid, score in top_10_final]
+    
+    # return result_df.to_dict(orient='records') # dữ liệu Pandas -> định dạng JSON
+    # Lấy Top 10 phim
     top_10_final = sorted(final_recommendations, key=lambda x: x[1], reverse=True)[:10]
 
-    # Đóng gói dữ liệu thành JSON để gửi về Frontend
     result_indices = [id_to_index[cid] for cid, score in top_10_final]
     result_df = anime_df.iloc[result_indices][['anime_id', 'name', 'genre']].copy()
     result_df['hybrid_score'] = [score for cid, score in top_10_final]
     
-    return result_df.to_dict(orient='records') # dữ liệu Pandas -> định dạng JSON
+    # Chuyển thành dạng list dictionary
+    recommendations_list = result_df.to_dict(orient='records')
+
+    print("\n[DEBUG] Đang cào ảnh bìa cho 10 phim (Đa luồng)...")
+    # Cào 10 ảnh cùng lúc để tăng tốc độ phản hồi
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        # Giao việc cào ảnh cho các worker
+        future_to_anime = {executor.submit(get_anime_poster, anime['anime_id']): anime for anime in recommendations_list}
+        
+        for future in concurrent.futures.as_completed(future_to_anime):
+            anime = future_to_anime[future]
+            try:
+                img_url = future.result()
+                anime['image_url'] = img_url
+            except Exception as exc:
+                anime['image_url'] = "https://via.placeholder.com/225x318/1e293b/94a3b8?text=No+Poster"
+
+    print("[DEBUG] Hoàn tất tải ảnh!")
+    return recommendations_list
 
 # 4. TẠO API ENDPOINT GIAO TIẾP VỚI FRONTEND
 @app.route('/api/recommend', methods=['POST'])

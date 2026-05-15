@@ -91,7 +91,9 @@ body { background-color: var(--bg-dark); color: var(--text-light); min-height: 1
 /* Grid & Cards Component */
 .section-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 24px; }
 .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-.anime-card { padding: 20px; border-radius: var(--radius-md); position: relative; transition: all 0.3s ease; z-index: 1; border: 1px solid var(--border-light); }
+.anime-card { padding: 20px; border-radius: var(--radius-md); position: relative; transition: all 0.3s ease; z-index: 1; border: 1px solid var(--border-light); 
+display: block; text-decoration: none; /* Bỏ gạch chân */ cursor: pointer;       /* Đổi con trỏ chuột thành hình bàn tay */
+}
 .anime-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); z-index: 2; }
 .rank-badge { position: absolute; top: -12px; left: -12px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 1rem; border: 4px solid var(--bg-dark); z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 .anime-poster-placeholder { width: 100%; height: 200px; border-radius: var(--radius-sm); margin-bottom: 16px; overflow: hidden; }
@@ -99,3 +101,24 @@ body { background-color: var(--bg-dark); color: var(--text-light); min-height: 1
 .anime-title { font-size: 1.2rem; line-height: 1.4; margin-bottom: 8px; font-weight: 700; }
 .anime-genre { font-size: 0.9rem; margin-bottom: 16px; }
 .score-badge { display: inline-block; padding: 8px 16px; border-radius: var(--radius-sm); font-weight: bold; font-size: 0.85rem; letter-spacing: 0.05em; }
+
+/* Styling cho ảnh Poster */
+.anime-poster-wrapper {
+  width: 100%;
+  height: 300px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.anime-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+/* Hiệu ứng zoom nhẹ khi di chuột vào thẻ phim */
+.anime-card:hover .anime-poster {
+  transform: scale(1.05);
+}

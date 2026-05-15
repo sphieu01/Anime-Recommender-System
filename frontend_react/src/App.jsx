@@ -7,11 +7,11 @@ import AnimeCard from './components/AnimeCard';
 import './App.css';
 
 function App() {
-  const [username, setUsername] = useState('');
-  const [recommendations, setRecommendations] = useState([]);
+  const [username, setUsername] = useState(''); // username: Lưu trữ chuỗi ký tự người dùng đang gõ vào ô Input.
+  const [recommendations, setRecommendations] = useState([]); // danh sach cac phim
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(null); // { name: "sphieu47", totalWatched: 150 }
 
   const handleRecommend = async (e) => {
     e.preventDefault();
