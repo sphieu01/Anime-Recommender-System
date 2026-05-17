@@ -1,26 +1,39 @@
-const Header = () => {
+const Header = ({ importMode, setImportMode }) => {
   return (
     <header className="header glass-panel">
       <div className="header-top">
-        <p className="project-sub gradient-text-accent">AI PROJECT</p>
-        {/* <svg className="header-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </linearGradient>
-          </defs>
-          <rect fill="url(#iconGrad)" rx="40" height="384" width="384" y="64" x="64"/>
-          <circle fill="#0a0e17" r="28" cy="192" cx="192"/>
-          <circle fill="#0a0e17" r="28" cy="192" cx="320"/>
-          <circle fill="#0a0e17" r="28" cy="256" cx="256"/>
-          <circle fill="#0a0e17" r="28" cy="320" cx="192"/>
-          <circle fill="#0a0e17" r="28" cy="320" cx="320"/>
-        </svg> */}
-        <h1 className="header-title text-light">Anime <span className="gradient-text-accent">Recommender System</span></h1>
+        <div className="logo-section">
+          <p className="project-sub gradient-text-accent">GRADUATION PROJECT</p>
+          <h1 className="header-title text-light">Anime <span className="gradient-text-accent">AI Engine</span></h1>
+        </div>
+
+        {/* --- NÚT CÔNG TẮC (TOGGLE SWITCH) --- */}
+        <div className="toggle-switch glass-input">
+          <div 
+            className={`toggle-slider ${importMode === 'manual' ? 'right' : 'left'}`}
+          ></div>
+          <button 
+            className={`toggle-btn ${importMode === 'mal' ? 'active' : ''}`}
+            onClick={() => setImportMode('mal')}
+          >
+            🌐 MyAnimeList Sync
+          </button>
+          <button 
+            className={`toggle-btn ${importMode === 'manual' ? 'active' : ''}`}
+            onClick={() => setImportMode('manual')}
+          >
+            ✍️ Manual Import
+          </button>
+        </div>
+        {/* ---------------------------------- */}
       </div>
+      
       <div className="header-bottom">
-        <p className="header-desc text-muted">Hệ thống gợi ý Anime Hybrid (Collaborative + Content-based)</p>
+        <p className="header-desc text-muted">
+          {importMode === 'mal' 
+            ? "Nhập Username MyAnimeList để hệ thống tự động đồng bộ lịch sử xem phim và tính toán gợi ý." 
+            : "Tự tìm kiếm phim, chấm điểm thủ công (1-10) để huấn luyện AI gợi ý theo sở thích cá nhân."}
+        </p>
       </div>
     </header>
   );

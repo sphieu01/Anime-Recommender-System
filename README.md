@@ -1,5 +1,7 @@
 # Anime-Recommender-System
 
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
 pip install beautifulsoup4 requests
 
 cd backend_flask
