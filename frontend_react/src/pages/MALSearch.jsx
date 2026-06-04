@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import AnimeCard from '../components/AnimeCard';
 
-const MALSearch = () => {
+const MALSearch = ({ aiEngine }) => {
   const [username, setUsername] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ const MALSearch = () => {
     setLoading(true); setError(null); setRecommendations([]); setUserInfo(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/recommend', { username });
+      const response = await axios.post('http://localhost:5000/api/recommend', { username : username , engine: aiEngine});
       setRecommendations(response.data.recommendations);
       setUserInfo({ name: response.data.username, totalWatched: response.data.total_watched });
     } catch (err) {
@@ -32,7 +32,7 @@ const MALSearch = () => {
         <div className="input-row">
           <input 
             type="text" 
-            placeholder="Ví dụ: sphieu47, Xinil..." 
+            placeholder="Ví dụ: coolname, trunghieu1504..." 
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             disabled={loading}

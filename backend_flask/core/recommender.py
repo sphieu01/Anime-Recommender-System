@@ -1,7 +1,6 @@
 import pickle
 import pandas as pd
 import concurrent.futures
-import os
 from core.scraper import get_anime_poster
 
 print("[CORE] Đang nạp SVD và Cosine Matrix lên bộ nhớ...")
@@ -10,8 +9,10 @@ print("[CORE] Đang nạp SVD và Cosine Matrix lên bộ nhớ...")
 with open('models/svd_model.pkl', 'rb') as f:
     svd_model = pickle.load(f) 
     
-with open('models/cosine_sim.pkl', 'rb') as f:
-    cosine_sim = pickle.load(f)
+with open('models/tfidf_cosine_sim.pkl', 'rb') as f:
+    tfidf_cosine_sim = pickle.load(f)
+with open('models/bert_cosine_sim.pkl', 'rb') as f:
+    bert_cosine_sim = pickle.load(f)
     
 with open('models/anime_artifacts.pkl', 'rb') as f:
     artifacts = pickle.load(f)
@@ -19,11 +20,27 @@ with open('models/anime_artifacts.pkl', 'rb') as f:
 anime_df = artifacts['dataframe']
 id_to_index = artifacts['id_to_index']
 print("[CORE] Tải model thành công!")
-def recommend_animes(user_ratings_dict, username):
+
+# THÊM THAM SỐ `engine` VÀO HÀM (Mặc định là deep_learning)
+def recommend_animes(user_ratings_dict, username, engine="deep_learning"):
     clean_ratings = {int(k): float(v) for k, v in user_ratings_dict.items()}
     user_ratings_dict = clean_ratings
     candidate_scores = {}
     watched_anime_ids = list(user_ratings_dict.keys())
+
+    # ==========================================
+    # CẤU HÌNH CÔNG TẮC: CHỌN MA TRẬN & TRỌNG SỐ
+    # ==========================================
+    if engine == "deep_learning":
+        cosine_sim = bert_cosine_sim # Dùng AI đọc hiểu ngữ nghĩa
+        cb_weight = 0.2              # Trọng số CB thấp vì BERT tìm ra rất nhiều phim giống nhau
+        svd_weight = 0.8             # Tin tưởng SVD 80% để đoán điểm chính xác
+        print(f"[AI ENGINE] Đang chạy bằng Deep Learning (BERT) cho user: {username}")
+    else:
+        cosine_sim = tfidf_cosine_sim # Dùng thuật toán đếm từ khóa cũ
+        cb_weight = 0.5               
+        svd_weight = 0.5
+        print(f"[AI ENGINE] Đang chạy bằng Classic (TF-IDF) cho user: {username}")
 
     # ==========================================
     # BƯỚC 1: Lọc thô bằng Content-Based (Cosine) + Trọng số Chất lượng
@@ -63,8 +80,9 @@ def recommend_animes(user_ratings_dict, username):
     for candidate_id, cb_score in top_50_candidates:
         svd_prediction = svd_model.predict(username, candidate_id)
         predicted_rating = svd_prediction.est 
-        
-        hybrid_score = (cb_score * 0.5) + (predicted_rating * 0.5)
+
+        # Áp dụng tỷ lệ trọng số 80-20 hoặc 50-50 tùy theo engine
+        hybrid_score = (cb_score * cb_weight) + (predicted_rating * svd_weight) # hybrid_score = (cb_score * 0.5) + (predicted_rating * 0.5)
         final_recommendations.append((candidate_id, hybrid_score))
 
     top_10_final = sorted(final_recommendations, key=lambda x: x[1], reverse=True)[:10]

@@ -13,7 +13,8 @@ CORS(app)
 def recommend():
     data = request.get_json()
     username = data.get('username')
-    
+    engine = data.get('engine', 'deep_learning')
+
     if not username:
         return jsonify({'error': 'Vui lòng nhập Username'}), 400
         
@@ -23,7 +24,7 @@ def recommend():
     if len(user_ratings) == 0:
         return jsonify({'error': 'User này chưa chấm điểm bộ anime nào!'}), 400
          
-    recommendations = recommend_animes(user_ratings, username)
+    recommendations = recommend_animes(user_ratings, username, engine)
     return jsonify({
         'message': 'Thành công',
         'username': username,
@@ -52,12 +53,13 @@ def search_anime():
 def recommend_manual():
     data = request.get_json()
     manual_ratings = data.get('ratings') # Nhận một dictionary {anime_id: score}
+    engine = data.get('engine', 'deep_learning')
     
     if not manual_ratings or len(manual_ratings) == 0:
         return jsonify({'error': 'Danh sách trống'}), 400
         
     # Gọi AI với một username ảo (Cold Start)
-    recommendations = recommend_animes(manual_ratings, "manual_guest_user")
+    recommendations = recommend_animes(manual_ratings, "manual_guest_user", engine)
     
     return jsonify({
         'message': 'Thành công',

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import AnimeCard from '../components/AnimeCard';
 
-const ManualImport = () => {
+const ManualImport = ({ aiEngine }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [selectedAnimes, setSelectedAnimes] = useState([]);
@@ -65,7 +65,8 @@ const ManualImport = () => {
 
     try {
       const response = await axios.post('http://localhost:5000/api/recommend-manual', {
-        ratings: ratingsDict
+        ratings: ratingsDict,
+        engine: aiEngine
       });
 
       if (response.data.recommendations && response.data.recommendations.length > 0) {
