@@ -28,9 +28,9 @@ def recommend_animes(user_ratings_dict, username, engine="deep_learning"):
     candidate_scores = {}
     watched_anime_ids = list(user_ratings_dict.keys())
 
-    # ==========================================
+
     # CẤU HÌNH CÔNG TẮC: CHỌN MA TRẬN & TRỌNG SỐ
-    # ==========================================
+
     if engine == "deep_learning":
         cosine_sim = bert_cosine_sim # Dùng AI đọc hiểu ngữ nghĩa
         cb_weight = 0.2              # Trọng số CB thấp vì BERT tìm ra rất nhiều phim giống nhau
@@ -42,9 +42,9 @@ def recommend_animes(user_ratings_dict, username, engine="deep_learning"):
         svd_weight = 0.5
         print(f"[AI ENGINE] Đang chạy bằng Classic (TF-IDF) cho user: {username}")
 
-    # ==========================================
+
     # BƯỚC 1: Lọc thô bằng Content-Based (Cosine) + Trọng số Chất lượng
-    # ==========================================
+
     for anime_id, rating in user_ratings_dict.items():
         if anime_id in id_to_index:
             idx = id_to_index[anime_id]
@@ -73,9 +73,9 @@ def recommend_animes(user_ratings_dict, username, engine="deep_learning"):
     # Lấy ra Top 50 ứng viên sáng giá nhất
     top_50_candidates = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:50]
 
-    # ==========================================
+
     # BƯỚC 2: Tinh chỉnh bằng Collaborative (SVD)
-    # ==========================================
+
     final_recommendations = []
     for candidate_id, cb_score in top_50_candidates:
         svd_prediction = svd_model.predict(username, candidate_id)
@@ -93,9 +93,8 @@ def recommend_animes(user_ratings_dict, username, engine="deep_learning"):
     
     recommendations_list = result_df.to_dict(orient='records')
 
-    # ==========================================
     # BƯỚC 3: Cào ảnh đa luồng
-    # ==========================================
+
     print(f"\n[DEBUG] Cào ảnh bìa cho 10 phim gợi ý của {username}...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         future_to_anime = {executor.submit(get_anime_poster, anime['anime_id']): anime for anime in recommendations_list}

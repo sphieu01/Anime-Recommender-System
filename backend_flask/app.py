@@ -6,9 +6,7 @@ from core.recommender import recommend_animes, anime_df
 app = Flask(__name__)
 CORS(app) 
 
-# ==========================================
 # API 1: GỢI Ý TỪ MYANIMELIST USERNAME
-# ==========================================
 @app.route('/api/recommend', methods=['POST'])
 def recommend():
     data = request.get_json()
@@ -32,9 +30,8 @@ def recommend():
         'recommendations': recommendations
     })
 
-# ==========================================
 # API 2: TÌM KIẾM ANIME (AUTOCOMPLETE 24.000 PHIM)
-# ==========================================
+
 @app.route('/api/search-anime', methods=['GET'])
 def search_anime():
     query = request.args.get('q', '').lower()
@@ -46,9 +43,9 @@ def search_anime():
     results = matches[['anime_id', 'name', 'genre']].to_dict(orient='records')
     return jsonify(results)
 
-# ==========================================
+
 # API 3: GỢI Ý TỪ DANH SÁCH NHẬP THỦ CÔNG
-# ==========================================
+
 @app.route('/api/recommend-manual', methods=['POST'])
 def recommend_manual():
     data = request.get_json()
